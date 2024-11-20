@@ -1,5 +1,3 @@
-# The Arrs Stack - youtube.com/@KLTechVideos
-# Prowlarr - Sonarr - Radarr - Lidarr - Readarr
 services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -94,6 +92,18 @@ services:
       - TZ=America/Chicago
     ports:
       - 8191:8191
+    restart: unless-stopped
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - C:\MEDIA_AUTOMATION\Overseerr\Config:/config
+    ports:
+      - 5055:5055
     restart: unless-stopped
 networks:
   arrs:
