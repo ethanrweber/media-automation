@@ -109,6 +109,22 @@ services:
     restart: unless-stopped
     networks:
       - arrs
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - C:\MEDIA_AUTOMATION\Bazarr/Config:/config
+      - C:\MEDIA_AUTOMATION\Radarr\Movies:/data/movies # should match radarr movies directory
+      - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/data/tvshows # should match sonarr tv shows directory
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+    networks:
+      - arrs
 networks:
   arrs:
     driver: bridge
