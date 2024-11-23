@@ -75,8 +75,8 @@ services:
       - TZ=Etc/UTC
     volumes:
       - C:\MEDIA_AUTOMATION\Readarr\Config:/config
-      - C:\MEDIA_AUTOMATION\Readarr\Books:/data/books # optional
-      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads # optional
+      - C:\MEDIA_AUTOMATION\Readarr\Books:/data/books
+      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
     ports:
       - 8787:8787
     restart: unless-stopped
