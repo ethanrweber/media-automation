@@ -93,6 +93,8 @@ services:
     ports:
       - 8191:8191
     restart: unless-stopped
+    networks:
+      - arrs
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
     container_name: overseerr
@@ -105,6 +107,8 @@ services:
     ports:
       - 5055:5055
     restart: unless-stopped
+    networks:
+      - arrs
 networks:
   arrs:
     driver: bridge
