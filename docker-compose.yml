@@ -168,7 +168,7 @@ services:
       - TZ=America/Chicago
       # Server list updater
       # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
-      - UPDATER_PERIOD=
+      - UPDATER_PERIOD=24h
     networks:
       - arrs
 networks:
