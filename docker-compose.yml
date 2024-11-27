@@ -125,6 +125,25 @@ services:
     restart: unless-stopped
     networks:
       - arrs
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    volumes:
+      - C:\MEDIA_AUTOMATION\Qbittorrent\appdata:/config
+      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads # should match other download directories
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+    networks:
+      - arrs
 networks:
   arrs:
     driver: bridge
