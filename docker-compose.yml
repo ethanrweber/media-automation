@@ -138,8 +138,6 @@ services:
       - C:\MEDIA_AUTOMATION\Qbittorrent\appdata:/config
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads # should match other download directories
     restart: unless-stopped
-    networks:
-      - arrs
     network_mode: service:gluetun
   gluetun:
     image: qmcgaw/gluetun
