@@ -137,13 +137,10 @@ services:
     volumes:
       - C:\MEDIA_AUTOMATION\Qbittorrent\appdata:/config
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads # should match other download directories
-    ports:
-      - 8080:8080
-      - 6881:6881
-      - 6881:6881/udp
     restart: unless-stopped
     networks:
       - arrs
+    network_mode: service:gluetun
   gluetun:
     image: qmcgaw/gluetun
     container_name: gluetun
@@ -155,6 +152,9 @@ services:
       - 8888:8888/tcp # HTTP proxy
       - 8388:8388/tcp # Shadowsocks
       - 8388:8388/udp # Shadowsocks
+      - 8080:8080 # qbittorrent web interface
+      - 6881:6881 # qbittorrent 
+      - 6881:6881/udp # qbittorrent 
     volumes:
       - C:\MEDIA_AUTOMATION\Gluetun:/gluetun
     environment:
