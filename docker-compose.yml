@@ -154,7 +154,13 @@ services:
       # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=wireguard
-        # Wireguard:
+      # Wireguard:
+      # you can generate the private key here for protonvpn: https://account.proton.me/u/0/vpn/WireGuard
+      # successful settings used: 
+      #   1. choose a name
+      #   2. platform windows
+      #   3. options: disable moderate NAT; enable NAT-PMP (port forwarding); enable VPN Accelerator;
+      #   4. server: Secure Core config server United States (via Switzerland)
       - WIREGUARD_PRIVATE_KEY_SECRETFILE=/run/secrets/protonvpn_wireguard_private_key
       - WIREGUARD_ADDRESSES=10.2.0.2/32
       # Timezone for accurate log times
