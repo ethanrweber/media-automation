@@ -31,11 +31,8 @@ services:
       - C:\MEDIA_AUTOMATION\Sonarr\Backup:/data/Backup
       - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/data/tvshows
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
-    ports:
-      - 8989:8989
     restart: unless-stopped
-    networks:
-      - arrs
+    network_mode: service:ts-remote-access
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
@@ -48,11 +45,8 @@ services:
       - C:\MEDIA_AUTOMATION\Radarr\Movies:/data/movies
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
       - C:\MEDIA_AUTOMATION\Radarr\Backup:/data/Backup
-    ports:
-      - 7878:7878
     restart: unless-stopped
-    networks:
-      - arrs
+    network_mode: service:ts-remote-access
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
     container_name: lidarr
@@ -177,6 +171,7 @@ services:
     environment:
       # authkey expires every 90 days
       # generate new key here: https://login.tailscale.com/admin/settings/keys
+      # todo: doesn't seem like providing an authkey file works... still need to login manually
       - TS_AUTHKEY_FILE=/run/secrets/tailscale_authkey
       - TS_STATE_DIR=/var/lib/tailscale
     volumes:
@@ -187,6 +182,8 @@ services:
       - sys_module
     ports:
       - 5055:5055 # overseerr
+      - 8989:8989 # sonarr
+      - 7878:7878 # radarr
     restart: unless-stopped
 networks:
   arrs:
