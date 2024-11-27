@@ -1,7 +1,7 @@
 
 secrets:
   protonvpn_wireguard_private_key:
-    file: ./secrets/protonvpn_wireguard_private_key.txt
+    file: ./secrets/protonvpn_wireguard_private_key
 services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -163,14 +163,16 @@ services:
       # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=wireguard
-      # Wireguard:
-      - WIREGUARD_PRIVATE_KEY=
+        # Wireguard:
+      - WIREGUARD_PRIVATE_KEY_SECRETFILE=/run/secrets/protonvpn_wireguard_private_key
       - WIREGUARD_ADDRESSES=10.2.0.2/32
       # Timezone for accurate log times
       - TZ=America/Chicago
       # Server list updater
       # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
       - UPDATER_PERIOD=24h
+    secrets:
+      - protonvpn_wireguard_private_key
 networks:
   arrs:
     driver: bridge
