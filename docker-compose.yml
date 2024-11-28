@@ -31,11 +31,8 @@ services:
       - C:\MEDIA_AUTOMATION\Sonarr\Backup:/data/Backup
       - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/data/tvshows
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
-    ports:
-      - 8989:8989
     restart: unless-stopped
-    networks:
-      - arrs
+    network_mode: service:ts-remote-access
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
@@ -48,11 +45,8 @@ services:
       - C:\MEDIA_AUTOMATION\Radarr\Movies:/data/movies
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
       - C:\MEDIA_AUTOMATION\Radarr\Backup:/data/Backup
-    ports:
-      - 7878:7878
     restart: unless-stopped
-    networks:
-      - arrs
+    network_mode: service:ts-remote-access
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
     container_name: lidarr
@@ -108,11 +102,8 @@ services:
       - TZ=America/Chicago
     volumes:
       - C:\MEDIA_AUTOMATION\Overseerr\Config:/config
-    ports:
-      - 5055:5055
     restart: unless-stopped
-    networks:
-      - arrs
+    network_mode: service:ts-remote-access
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
@@ -163,7 +154,13 @@ services:
       # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=wireguard
-        # Wireguard:
+      # Wireguard:
+      # you can generate the private key here for protonvpn: https://account.proton.me/u/0/vpn/WireGuard
+      # successful settings used: 
+      #   1. choose a name
+      #   2. platform windows
+      #   3. options: disable moderate NAT; enable NAT-PMP (port forwarding); enable VPN Accelerator;
+      #   4. server: Secure Core config server United States (via Switzerland)
       - WIREGUARD_PRIVATE_KEY_SECRETFILE=/run/secrets/protonvpn_wireguard_private_key
       - WIREGUARD_ADDRESSES=10.2.0.2/32
       # Timezone for accurate log times
@@ -172,7 +169,28 @@ services:
       # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
       - UPDATER_PERIOD=24h
     secrets:
-      - protonvpn_wireguard_private_key
+      - protonvpn_wireguard_private_key   
+  ts-remote-access:
+    image: tailscale/tailscale:latest
+    container_name: ts-remote-access
+    hostname: media-server
+    environment:
+      # authkey expires every 90 days
+      # generate new key here: https://login.tailscale.com/admin/settings/keys
+      # todo: doesn't seem like providing an authkey file works... still need to login manually
+      - TS_AUTHKEY_FILE=/run/secrets/tailscale_authkey
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      #- ${PWD}/ts-nginx-test/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    ports:
+      - 5055:5055 # overseerr
+      - 8989:8989 # sonarr
+      - 7878:7878 # radarr
+    restart: unless-stopped
 networks:
   arrs:
     driver: bridge
