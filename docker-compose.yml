@@ -207,19 +207,17 @@ services:
       - serverIP=192.168.1.136 # I'm using my local ip; cmd > ipconfig
       - serverPort=8266
       - webUIPort=8265
-      - internalNode=true
+      - internalNode=true # run the node as part of the server container rather than separately
       - inContainer=true
       - ffmpegVersion=6
       - nodeName=internal-node
       - NVIDIA_DRIVER_CAPABILITIES=all
       - NVIDIA_VISIBLE_DEVICES=all
     volumes:
-      # note: if any changes are made, also make them in the tdarr node service below
       - C:\MEDIA_AUTOMATION\Tdarr\server:/app/server
       - C:\MEDIA_AUTOMATION\Tdarr\configs:/app/configs
       - C:\MEDIA_AUTOMATION\Tdarr\logs:/app/logs
       - C:\MEDIA_AUTOMATION\Tdarr\transcode_cache:/temp # note from tutorial - it's preferable to have the transcode cache on an ssd
-      # - /media:/media # todo: investigate if this mapping is necessary...
       - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/home/Tdarr/Media/TVShows
       - C:\MEDIA_AUTOMATION\Radarr\movies:/home/Tdarr/Media/Movies
     devices:
