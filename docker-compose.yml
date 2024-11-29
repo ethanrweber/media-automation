@@ -204,7 +204,7 @@ services:
       - PUID=1000
       - PGID=1000
       - UMASK_SET=002
-      - serverIP=192.168.1.136 # local ip; check cmd > ipconfig to find yours
+      - serverIP=192.168.1.136 # I'm using my local ip; cmd > ipconfig
       - serverPort=8266
       - webUIPort=8265
       - internalNode=true
@@ -214,12 +214,47 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=all
       - NVIDIA_VISIBLE_DEVICES=all
     volumes:
+      # note: if any changes are made, also make them in the tdarr node service below
       - C:\MEDIA_AUTOMATION\Tdarr\server:/app/server
       - C:\MEDIA_AUTOMATION\Tdarr\configs:/app/configs
       - C:\MEDIA_AUTOMATION\Tdarr\logs:/app/logs
       - C:\MEDIA_AUTOMATION\Tdarr\transcode_cache:/temp # note from tutorial - it's preferable to have the transcode cache on an ssd
       # - /media:/media # todo: investigate if this mapping is necessary...
       - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/home/Tdarr/Media/TVShows # todo: verify these mappings are right
+      - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/home/Tdarr/Media/Movies
+    devices:
+      - /dev/dri:/dev/dri
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+  tdarr-node:
+    container_name: tdarr-node
+    image: ghcr.io/haveagitgat/tdarr_node:latest
+    restart: unless-stopped
+    network_mode: service:tdarr
+    environment:
+      - TZ=America/Chicago
+      - PUID=1000
+      - PGID=1000
+      - UMASK_SET=002
+      - nodeName=node-1
+      - serverIP=192.168.1.136 # I'm using my local ip; cmd > ipconfig
+      - serverPort=8266
+      - inContainer=true
+      - ffmpegVersion=6
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      # all same volumes as tdarr server
+      - C:\MEDIA_AUTOMATION\Tdarr\server:/app/server
+      - C:\MEDIA_AUTOMATION\Tdarr\configs:/app/configs
+      - C:\MEDIA_AUTOMATION\Tdarr\logs:/app/logs
+      - C:\MEDIA_AUTOMATION\Tdarr\transcode_cache:/temp
+      - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/home/Tdarr/Media/TVShows
       - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/home/Tdarr/Media/Movies
     devices:
       - /dev/dri:/dev/dri
