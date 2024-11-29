@@ -220,8 +220,8 @@ services:
       - C:\MEDIA_AUTOMATION\Tdarr\logs:/app/logs
       - C:\MEDIA_AUTOMATION\Tdarr\transcode_cache:/temp # note from tutorial - it's preferable to have the transcode cache on an ssd
       # - /media:/media # todo: investigate if this mapping is necessary...
-      - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/home/Tdarr/Media/TVShows # todo: verify these mappings are right
-      - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/home/Tdarr/Media/Movies
+      - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/home/Tdarr/Media/TVShows
+      - C:\MEDIA_AUTOMATION\Radarr\movies:/home/Tdarr/Media/Movies
     devices:
       - /dev/dri:/dev/dri
     deploy:
