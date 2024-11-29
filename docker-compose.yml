@@ -2,6 +2,8 @@
 secrets:
   protonvpn_wireguard_private_key:
     file: ./secrets/protonvpn_wireguard_private_key
+  tailscale_authkey:
+    file: ./secrets/tailscale_authkey
 services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
