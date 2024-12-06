@@ -31,7 +31,7 @@ services:
     volumes:
       - C:\MEDIA_AUTOMATION\Sonarr\Config:/config
       - C:\MEDIA_AUTOMATION\Sonarr\Backup:/data/Backup
-      - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/data/tvshows
+      - E:\media\tvshows:/data/tvshows
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
     restart: unless-stopped
     network_mode: service:ts-remote-access
@@ -44,7 +44,7 @@ services:
       - TZ=America/Chicago
     volumes:
       - C:\MEDIA_AUTOMATION\Radarr\Config:/config
-      - C:\MEDIA_AUTOMATION\Radarr\Movies:/data/movies
+      - E:\media\movies:/data/movies
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
       - C:\MEDIA_AUTOMATION\Radarr\Backup:/data/Backup
     restart: unless-stopped
@@ -58,7 +58,7 @@ services:
       - TZ=America/Chicago
     volumes:
       - C:\MEDIA_AUTOMATION\Lidarr\Config:/config
-      - C:\MEDIA_AUTOMATION\Lidarr\Music:/data/musicfolder
+      - E:\media\music:/data/musicfolder
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
       - C:\MEDIA_AUTOMATION\Lidarr\Backup:/data/Backup
     ports:
@@ -75,7 +75,7 @@ services:
       - TZ=Etc/UTC
     volumes:
       - C:\MEDIA_AUTOMATION\Readarr\Config:/config
-      - C:\MEDIA_AUTOMATION\Readarr\Books:/data/books
+      - E:\media\books:/data/books
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
     ports:
       - 8787:8787
@@ -115,8 +115,8 @@ services:
       - TZ=America/Chicago
     volumes:
       - C:\MEDIA_AUTOMATION\Bazarr/Config:/config
-      - C:\MEDIA_AUTOMATION\Radarr\Movies:/data/movies # should match radarr movies directory
-      - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/data/tvshows # should match sonarr tv shows directory
+      - E:\media\movies:/data/movies # should match radarr movies directory
+      - E:\media\tvshows:/data/tvshows # should match sonarr tv shows directory
     ports:
       - 6767:6767
     restart: unless-stopped
@@ -220,8 +220,8 @@ services:
       - C:\MEDIA_AUTOMATION\Tdarr\configs:/app/configs
       - C:\MEDIA_AUTOMATION\Tdarr\logs:/app/logs
       - C:\MEDIA_AUTOMATION\Tdarr\transcode_cache:/temp # note from tutorial - it's preferable to have the transcode cache on an ssd
-      - C:\MEDIA_AUTOMATION\Sonarr\tvshows:/home/Tdarr/Media/TVShows
-      - C:\MEDIA_AUTOMATION\Radarr\movies:/home/Tdarr/Media/Movies
+      - E:\media\tvshows:/home/Tdarr/Media/TVShows
+      - E:\media\movies:/home/Tdarr/Media/Movies
     devices:
       - /dev/dri:/dev/dri
     deploy:
