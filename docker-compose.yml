@@ -122,6 +122,18 @@ services:
     restart: unless-stopped
     networks:
       - arrs
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - C:\MEDIA_AUTOMATION\Tautulli/Config:/config
+    restart: unless-stopped
+    networks:
+      - arrs
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
