@@ -66,22 +66,6 @@ services:
     restart: unless-stopped
     networks:
       - arrs
-  readarr:
-    image: lscr.io/linuxserver/readarr:develop
-    container_name: readarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-    volumes:
-      - C:\MEDIA_AUTOMATION\Readarr\Config:/config
-      - E:\media\books:/data/books
-      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
-    ports:
-      - 8787:8787
-    restart: unless-stopped
-    networks:
-      - arrs
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
