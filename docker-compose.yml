@@ -217,7 +217,7 @@ services:
       - PUID=1000
       - PGID=1000
       - UMASK_SET=002
-      - serverIP=192.168.1.136 # I'm using my local ip; cmd > ipconfig
+      - serverIP=192.168.1.2 # I'm using my local ip; cmd > ipconfig
       - serverPort=8266
       - webUIPort=8265
       - internalNode=true # run the node as part of the server container rather than separately
