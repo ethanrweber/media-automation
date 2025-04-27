@@ -106,6 +106,18 @@ services:
     restart: unless-stopped
     networks:
       - arrs
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
+      - C:\MEDIA_AUTOMATION\Homarr/AppData:/appdata
+    environment:
+      - SECRET_ENCRYPTION_KEY=4e91bf99970a186dfd16f5720c132a51a94fd7538309c9d9485d01e03ed3504c
+      - PUID=1000
+      - PGID=1000
+    network_mode: service:ts-remote-access
   tautulli:
     image: lscr.io/linuxserver/tautulli:latest
     container_name: tautulli
@@ -190,6 +202,7 @@ services:
       - 5055:5055 # overseerr
       - 8989:8989 # sonarr
       - 7878:7878 # radarr
+      - 7575:7575 # homarr
     restart: unless-stopped
   tdarr:
     container_name: tdarr-server
