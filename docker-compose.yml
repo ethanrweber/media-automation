@@ -141,7 +141,6 @@ services:
       - TZ=America/Chicago
       - WEBUI_PORT=8080
       - TORRENTING_PORT=6881
-      - BIND_TO_INTERFACE=tun0
     volumes:
       - C:\MEDIA_AUTOMATION\Qbittorrent\appdata:/config
       - C:\MEDIA_AUTOMATION\Downloads:/data/downloads # should match other download directories
