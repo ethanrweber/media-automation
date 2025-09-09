@@ -245,6 +245,23 @@ services:
           - driver: nvidia
             count: all
             capabilities: [gpu]
+  smokeping:
+    image: lscr.io/linuxserver/smokeping:latest
+    container_name: smokeping
+    hostname: smokeping #optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      # - MASTER_URL=http://<master-host-ip>:80/smokeping/ #optional
+      # - SHARED_SECRET=password #optional
+      # - CACHE_DIR=/tmp #optional
+    volumes:
+      - C:\MEDIA_AUTOMATION\SmokePing\config:/config
+      - C:\MEDIA_AUTOMATION\SmokePing\data:/data
+    ports:
+      - 80:80
+    restart: unless-stopped
 networks:
   arrs:
     driver: bridge
