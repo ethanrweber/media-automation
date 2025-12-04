@@ -163,12 +163,14 @@ services:
       - 8080:8080 # qbittorrent web interface
       - 6881:6881 # qbittorrent 
       - 6881:6881/udp # qbittorrent 
+      - 6881:6881/tcp # qbittorrent
     volumes:
       - C:\MEDIA_AUTOMATION\Gluetun:/gluetun
     environment:
       # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=wireguard
+      - VPN_PORT_FORWARDING=on
       # Wireguard:
       # you can generate the private key here for protonvpn: https://account.proton.me/u/0/vpn/WireGuard
       # successful settings used: 
