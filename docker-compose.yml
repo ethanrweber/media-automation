@@ -172,7 +172,7 @@ services:
       - TZ=America/Chicago
       - UPDATER_PERIOD=24h
       - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24,10.0.0.0/16,172.21.0.0/16
-      - DOT_PROVIDERS=cloudflare,google
+      - DNS_UPSTREAM_RESOLVERS=cloudflare,google
       - PUBLICIP_API=ip2location
       ### Wireguard Settings
       - VPN_TYPE=wireguard
