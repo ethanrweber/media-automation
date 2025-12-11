@@ -1,3 +1,4 @@
 
 # ignore everything in the /secrets folder
 secrets
+.env
