@@ -1,6 +1,4 @@
 secrets:
-  protonvpn_wireguard_private_key:
-    file: ./secrets/protonvpn_wireguard_private_key
   tailscale_authkey:
     file: ./secrets/tailscale_authkey
 services:
@@ -184,13 +182,13 @@ services:
       - WIREGUARD_ADDRESSES=10.2.0.2/32
       - DNS_ADDRESS=10.2.0.1
       - LOG_LEVEL=debug
-    secrets:
-      - protonvpn_wireguard_private_key
   gluetun-qbittorrent-port-manager:
     image: snoringdragon/gluetun-qbittorrent-port-manager:latest
     restart: unless-stopped
     container_name: gt-port-manager
     network_mode: "service:gluetun"
+    volumes:
+      - C:\MEDIA_AUTOMATION\Gluetun:/gluetun
     environment:
       - QBITTORRENT_SERVER=localhost # IP Address of qbittorrent
       - QBITTORRENT_PORT=8080
