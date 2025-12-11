@@ -1,4 +1,3 @@
-
 secrets:
   protonvpn_wireguard_private_key:
     file: ./secrets/protonvpn_wireguard_private_key
@@ -161,30 +160,49 @@ services:
       - 8388:8388/tcp # Shadowsocks
       - 8388:8388/udp # Shadowsocks
       - 8080:8080 # qbittorrent web interface
-      - 6881:6881 # qbittorrent 
+      - 6881:6881 # qbittorrent
       - 6881:6881/udp # qbittorrent
     volumes:
       - C:\MEDIA_AUTOMATION\Gluetun:/gluetun
+    # testing out a new environment config
+    # see this discussion on github - https://github.com/qdm12/gluetun/discussions/2686
     environment:
-      # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
       - VPN_SERVICE_PROVIDER=protonvpn
-      - VPN_TYPE=wireguard
-      # Wireguard:
-      # you can generate the private key here for protonvpn: https://account.proton.me/u/0/vpn/WireGuard
-      # successful settings used: 
-      #   1. choose a name
-      #   2. platform windows
-      #   3. options: disable moderate NAT; enable NAT-PMP (port forwarding); enable VPN Accelerator;
-      #   4. server: Secure Core config server United States (via Switzerland)
-      - WIREGUARD_PRIVATE_KEY_SECRETFILE=/run/secrets/protonvpn_wireguard_private_key
-      - WIREGUARD_ADDRESSES=10.2.0.2/32
-      # Timezone for accurate log times
+      - VPN_PORT_FORWARDING=on
+      - VPN_PORT_FORWARDING_PROVIDER=protonvpn
+      - VPN_PORT_FORWARDING_STATUS_FILE=/gluetun/forwarded_port
       - TZ=America/Chicago
-      # Server list updater
-      # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
       - UPDATER_PERIOD=24h
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24,10.0.0.0/16,172.21.0.0/16
+      - DOT_PROVIDERS=cloudflare,google
+      - PUBLICIP_API=ip2location
+      ### Wireguard Settings
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PUBLIC_KEY=${WG_PUBLIC_KEY}
+      - WIREGUARD_PRIVATE_KEY=${WG_PRIVATE_KEY}
+      - WIREGUARD_ENDPOINT_IP=${WG_ENDPOINT_IP}
+      - WIREGUARD_ADDRESSES=10.2.0.2/32
+      - DNS_ADDRESS=10.2.0.1
+      - LOG_LEVEL=debug
     secrets:
       - protonvpn_wireguard_private_key
+  gluetun-qbittorrent-port-manager:
+    image: snoringdragon/gluetun-qbittorrent-port-manager:latest
+    restart: unless-stopped
+    container_name: gt-port-manager
+    network_mode: "service:gluetun"
+    environment:
+      - QBITTORRENT_SERVER=localhost # IP Address of qbittorrent
+      - QBITTORRENT_PORT=8080
+      - QBITTORRENT_USER=qbittorrent-login # username
+      - QBITTORRENT_PASS=8vF>98t>!Wst # password
+      - PORT_FORWARDED=/tmp/gluetun/forwarded_port
+      - HTTP_S=http # Select 'http' or 'https' depending on if you use certificates.
+      # seems like these may not be needed:
+      # - GLUETUN_HOST=localhost # IP or FQDN of gluetun control server
+      # - GLUETUN_PORT=8000 # port of gluetun control server
+      # - RECHECK_TIME=60 # number of seconds between checks to gluetun server for port
+      - TZ=America/Chicago
   ts-remote-access:
     image: tailscale/tailscale:latest
     container_name: ts-remote-access
@@ -242,9 +260,9 @@ services:
       resources:
         reservations:
           devices:
-          - driver: nvidia
-            count: all
-            capabilities: [gpu]
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
   smokeping:
     image: lscr.io/linuxserver/smokeping:latest
     container_name: smokeping
