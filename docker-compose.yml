@@ -184,7 +184,7 @@ services:
       # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
       - UPDATER_PERIOD=24h
     secrets:
-      - protonvpn_wireguard_private_key   
+      - protonvpn_wireguard_private_key
   ts-remote-access:
     image: tailscale/tailscale:latest
     container_name: ts-remote-access
