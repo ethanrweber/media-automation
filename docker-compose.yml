@@ -189,6 +189,9 @@ services:
     network_mode: "service:gluetun"
     volumes:
       - C:\MEDIA_AUTOMATION\Gluetun:/gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
     environment:
       - QBITTORRENT_SERVER=localhost # IP Address of qbittorrent
       - QBITTORRENT_PORT=8080
