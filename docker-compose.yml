@@ -196,7 +196,7 @@ services:
       - QBITTORRENT_PORT=8080
       - QBITTORRENT_USER=qbittorrent-login # username
       - QBITTORRENT_PASS=8vF>98t>!Wst # password
-      - PORT_FORWARDED=/tmp/gluetun/forwarded_port
+      - PORT_FORWARDED=/gluetun/forwarded_port
       - HTTP_S=http # Select 'http' or 'https' depending on if you use certificates.
       # seems like these may not be needed:
       # - GLUETUN_HOST=localhost # IP or FQDN of gluetun control server
