@@ -191,10 +191,10 @@ services:
       gluetun:
         condition: service_healthy
     environment:
-      - QBITTORRENT_SERVER=localhost # IP Address of qbittorrent
+      - QBITTORRENT_SERVER=localhost
       - QBITTORRENT_PORT=8080
-      - QBITTORRENT_USER=qbittorrent-login # username
-      - QBITTORRENT_PASS=8vF>98t>!Wst # password
+      - QBITTORRENT_USER=${QBITTORRENT_USER}
+      - QBITTORRENT_PASS=${QBITTORRENT_PASS}
       - PORT_FORWARDED=/gluetun/forwarded_port
       - HTTP_S=http # Select 'http' or 'https' depending on if you use certificates.
       # seems like these may not be needed:
