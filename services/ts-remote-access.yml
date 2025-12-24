@@ -1,0 +1,24 @@
+services:
+  ts-remote-access:
+    image: tailscale/tailscale:latest
+    container_name: ts-remote-access
+    hostname: media-server
+    environment:
+      # authkey expires every 90 days
+      # generate new key here: https://login.tailscale.com/admin/settings/keys
+      # todo: doesn't seem like providing an authkey file works... still need to login manually
+      - TS_AUTHKEY_FILE=/run/secrets/tailscale_authkey
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    ports:
+      - 5055:5055 # overseerr
+      - 8989:8989 # sonarr
+      - 7878:7878 # radarr
+      - 7575:7575 # homarr
+    restart: unless-stopped
+    secrets:
+      - tailscale_authkey

@@ -1,278 +1,31 @@
-secrets:
-  tailscale_authkey:
-    file: ./secrets/tailscale_authkey
-services:
-  prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - C:\MEDIA_AUTOMATION\Prowlarr\Config:/config
-      - C:\MEDIA_AUTOMATION\Prowlarr\Backup:/data/Backup
-      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
-    ports:
-      - 9697:9696
-    restart: unless-stopped
-    networks:
-      - arrs
-  sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
-    container_name: sonarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - C:\MEDIA_AUTOMATION\Sonarr\Config:/config
-      - C:\MEDIA_AUTOMATION\Sonarr\Backup:/data/Backup
-      - E:\media\tvshows:/data/tvshows
-      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
-    restart: unless-stopped
-    network_mode: service:ts-remote-access
-  radarr:
-    image: lscr.io/linuxserver/radarr:latest
-    container_name: radarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - C:\MEDIA_AUTOMATION\Radarr\Config:/config
-      - E:\media\movies:/data/movies
-      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
-      - C:\MEDIA_AUTOMATION\Radarr\Backup:/data/Backup
-    restart: unless-stopped
-    network_mode: service:ts-remote-access
-  # lidarr:
-  #   image: lscr.io/linuxserver/lidarr:latest
-  #   container_name: lidarr
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=America/Chicago
-  #   volumes:
-  #     - C:\MEDIA_AUTOMATION\Lidarr\Config:/config
-  #     - E:\media\music:/data/musicfolder
-  #     - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
-  #     - C:\MEDIA_AUTOMATION\Lidarr\Backup:/data/Backup
-  #   ports:
-  #     - 8686:8686
-  #   restart: unless-stopped
-  #   networks:
-  #     - arrs
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr
-    environment:
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - LOG_HTML=${LOG_HTML:-false}
-      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-      - TZ=America/Chicago
-    ports:
-      - 8191:8191
-    restart: unless-stopped
-    networks:
-      - arrs
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
-    container_name: overseerr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - C:\MEDIA_AUTOMATION\Overseerr\Config:/config
-    restart: unless-stopped
-    network_mode: service:ts-remote-access
-  bazarr:
-    image: lscr.io/linuxserver/bazarr:latest
-    container_name: bazarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-    volumes:
-      - C:\MEDIA_AUTOMATION\Bazarr/Config:/config
-      - E:\media\movies:/data/movies # should match radarr movies directory
-      - E:\media\tvshows:/data/tvshows # should match sonarr tv shows directory
-    ports:
-      - 6767:6767
-    restart: unless-stopped
-    networks:
-      - arrs
-  homarr:
-    image: ghcr.io/homarr-labs/homarr:latest
-    container_name: homarr
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
-      - C:\MEDIA_AUTOMATION\Homarr/AppData:/appdata # todo: fix this path
-    environment:
-      - SECRET_ENCRYPTION_KEY=4e91bf99970a186dfd16f5720c132a51a94fd7538309c9d9485d01e03ed3504c
-      - PUID=1000
-      - PGID=1000
-    network_mode: service:ts-remote-access
-  tautulli:
-    image: lscr.io/linuxserver/tautulli:latest
-    container_name: tautulli
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-    volumes:
-      - C:\MEDIA_AUTOMATION\Tautulli/Config:/config
-    ports:
-      - 8181:8181
-    restart: unless-stopped
-    networks:
-      - arrs
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Chicago
-      - WEBUI_PORT=8080
-      - TORRENTING_PORT=6881
-    volumes:
-      - C:\MEDIA_AUTOMATION\Qbittorrent\appdata:/config
-      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads # should match other download directories
-    restart: unless-stopped
-    network_mode: service:gluetun
-    depends_on:
-      gluetun:
-        condition: service_healthy
-  gluetun:
-    image: qmcgaw/gluetun
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    ports:
-      - 8888:8888/tcp # HTTP proxy
-      - 8388:8388/tcp # Shadowsocks
-      - 8388:8388/udp # Shadowsocks
-      - 8080:8080 # qbittorrent web interface
-      - 6881:6881 # qbittorrent
-      - 6881:6881/udp # qbittorrent
-    volumes:
-      - C:\MEDIA_AUTOMATION\Gluetun:/gluetun
-    environment:
-      - VPN_SERVICE_PROVIDER=protonvpn
-      - VPN_PORT_FORWARDING=on
-      - VPN_PORT_FORWARDING_PROVIDER=protonvpn
-      - VPN_PORT_FORWARDING_STATUS_FILE=/gluetun/forwarded_port
-      - TZ=America/Chicago
-      - UPDATER_PERIOD=24h
-      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24,10.0.0.0/16,172.21.0.0/16
-      - DNS_UPSTREAM_RESOLVERS=cloudflare,google
-      - PUBLICIP_API=ip2location
-      ### Wireguard Settings
-      - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY=${WG_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=10.2.0.2/32
-      - DNS_ADDRESS=10.2.0.1
-      - LOG_LEVEL=debug
-  gluetun-qbittorrent-port-manager:
-    image: snoringdragon/gluetun-qbittorrent-port-manager:latest
-    restart: unless-stopped
-    container_name: gt-port-manager
-    network_mode: "service:gluetun"
-    volumes:
-      - C:\MEDIA_AUTOMATION\Gluetun:/gluetun
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    environment:
-      - QBITTORRENT_SERVER=localhost
-      - QBITTORRENT_PORT=8080
-      - QBITTORRENT_USER=${QBITTORRENT_USER}
-      - QBITTORRENT_PASS=${QBITTORRENT_PASS}
-      - PORT_FORWARDED=/gluetun/forwarded_port
-      - HTTP_S=http # Select 'http' or 'https' depending on if you use certificates.
-      - TZ=America/Chicago
-  ts-remote-access:
-    image: tailscale/tailscale:latest
-    container_name: ts-remote-access
-    hostname: media-server
-    environment:
-      # authkey expires every 90 days
-      # generate new key here: https://login.tailscale.com/admin/settings/keys
-      # todo: doesn't seem like providing an authkey file works... still need to login manually
-      - TS_AUTHKEY_FILE=/run/secrets/tailscale_authkey
-      - TS_STATE_DIR=/var/lib/tailscale
-    volumes:
-      #- ${PWD}/ts-nginx-test/state:/var/lib/tailscale
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-      - sys_module
-    ports:
-      - 5055:5055 # overseerr
-      - 8989:8989 # sonarr
-      - 7878:7878 # radarr
-      - 7575:7575 # homarr
-    restart: unless-stopped
-  tdarr:
-    container_name: tdarr-server
-    image: ghcr.io/haveagitgat/tdarr:latest
-    restart: unless-stopped
-    network_mode: bridge
-    ports:
-      - 8265:8265 # webUI port
-      - 8266:8266 # server port
-    environment:
-      - TZ=America/Chicago
-      - PUID=1000
-      - PGID=1000
-      - UMASK_SET=002
-      - serverIP=192.168.1.2 # I'm using my local ip; cmd > ipconfig
-      - serverPort=8266
-      - webUIPort=8265
-      - internalNode=true # run the node as part of the server container rather than separately
-      - inContainer=true
-      - ffmpegVersion=6
-      - nodeName=internal-node
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - NVIDIA_VISIBLE_DEVICES=all
-    volumes:
-      - C:\MEDIA_AUTOMATION\Tdarr\server:/app/server
-      - C:\MEDIA_AUTOMATION\Tdarr\configs:/app/configs
-      - C:\MEDIA_AUTOMATION\Tdarr\logs:/app/logs
-      - C:\MEDIA_AUTOMATION\Tdarr\transcode_cache:/temp # note from tutorial - it's preferable to have the transcode cache on an ssd
-      - E:\media\tvshows:/home/Tdarr/Media/TVShows
-      - E:\media\movies:/home/Tdarr/Media/Movies
-    devices:
-      - /dev/dri:/dev/dri
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-  smokeping:
-    image: lscr.io/linuxserver/smokeping:latest
-    container_name: smokeping
-    hostname: smokeping #optional
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-      # - MASTER_URL=http://<master-host-ip>:80/smokeping/ #optional
-      # - SHARED_SECRET=password #optional
-      # - CACHE_DIR=/tmp #optional
-    volumes:
-      - C:\MEDIA_AUTOMATION\SmokePing\config:/config
-      - C:\MEDIA_AUTOMATION\SmokePing\data:/data
-    ports:
-      - 80:80
-    restart: unless-stopped
+# Main orchestration file
+# To disable a service: comment out its include line
+
+include:
+  # VPN and network infrastructure (load first - dependencies)
+  - path: ./services/gluetun.yml
+  - path: ./services/ts-remote-access.yml
+
+  # Services using gluetun network namespace
+  - path: ./services/qbittorrent.yml
+  - path: ./services/gluetun-qbittorrent-port-manager.yml
+
+  # Services using ts-remote-access network namespace
+  - path: ./services/sonarr.yml
+  - path: ./services/radarr.yml
+  - path: ./services/overseerr.yml
+  - path: ./services/homarr.yml
+
+  # Independent services (alphabetical order)
+  - path: ./services/bazarr.yml
+  - path: ./services/flaresolverr.yml
+  # - path: ./services/lidarr.yml     # Disabled - uncomment to enable
+  - path: ./services/prowlarr.yml
+  - path: ./services/smokeping.yml
+  - path: ./services/tautulli.yml
+  - path: ./services/tdarr.yml
+
+# Shared network definitions
 networks:
   arrs:
     driver: bridge
@@ -280,3 +33,8 @@ networks:
       config:
         - subnet: 173.25.0.0/16
           gateway: 173.25.0.1
+
+# Shared secrets
+secrets:
+  tailscale_authkey:
+    file: ./secrets/tailscale_authkey

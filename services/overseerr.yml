@@ -1,0 +1,12 @@
+services:
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - C:\MEDIA_AUTOMATION\Overseerr\Config:/config
+    restart: unless-stopped
+    network_mode: service:ts-remote-access
