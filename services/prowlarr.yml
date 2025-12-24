@@ -1,0 +1,21 @@
+services:
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - C:\MEDIA_AUTOMATION\Prowlarr\Config:/config
+      - C:\MEDIA_AUTOMATION\Prowlarr\Backup:/data/Backup
+      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
+    ports:
+      - 9697:9696
+    restart: unless-stopped
+    networks:
+      - arrs
+
+networks:
+  arrs:
+    external: true
