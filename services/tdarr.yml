@@ -1,0 +1,39 @@
+services:
+  tdarr:
+    container_name: tdarr-server
+    image: ghcr.io/haveagitgat/tdarr:latest
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - 8265:8265 # webUI port
+      - 8266:8266 # server port
+    environment:
+      - TZ=America/Chicago
+      - PUID=1000
+      - PGID=1000
+      - UMASK_SET=002
+      - serverIP=192.168.1.2 # I'm using my local ip; cmd > ipconfig
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true # run the node as part of the server container rather than separately
+      - inContainer=true
+      - ffmpegVersion=6
+      - nodeName=internal-node
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - C:\MEDIA_AUTOMATION\Tdarr\server:/app/server
+      - C:\MEDIA_AUTOMATION\Tdarr\configs:/app/configs
+      - C:\MEDIA_AUTOMATION\Tdarr\logs:/app/logs
+      - C:\MEDIA_AUTOMATION\Tdarr\transcode_cache:/temp # note from tutorial - it's preferable to have the transcode cache on an ssd
+      - E:\media\tvshows:/home/Tdarr/Media/TVShows
+      - E:\media\movies:/home/Tdarr/Media/Movies
+    devices:
+      - /dev/dri:/dev/dri
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
