@@ -1,0 +1,22 @@
+services:
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - C:\MEDIA_AUTOMATION\Lidarr\Config:/config
+      - E:\media\music:/data/musicfolder
+      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
+      - C:\MEDIA_AUTOMATION\Lidarr\Backup:/data/Backup
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+    networks:
+      - arrs
+
+networks:
+  arrs:
+    external: true
