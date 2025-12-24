@@ -1,0 +1,19 @@
+services:
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - C:\MEDIA_AUTOMATION\Tautulli/Config:/config
+    ports:
+      - 8181:8181
+    restart: unless-stopped
+    networks:
+      - arrs
+
+networks:
+  arrs:
+    external: true
