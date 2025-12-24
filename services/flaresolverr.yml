@@ -12,7 +12,3 @@ services:
     restart: unless-stopped
     networks:
       - arrs
-
-networks:
-  arrs:
-    external: true
