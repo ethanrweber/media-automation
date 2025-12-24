@@ -22,7 +22,3 @@ services:
     restart: unless-stopped
     secrets:
       - tailscale_authkey
-
-secrets:
-  tailscale_authkey:
-    external: true
