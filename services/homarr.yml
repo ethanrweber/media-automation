@@ -1,0 +1,13 @@
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
+      - C:\MEDIA_AUTOMATION\Homarr/AppData:/appdata # todo: fix this path
+    environment:
+      - SECRET_ENCRYPTION_KEY=4e91bf99970a186dfd16f5720c132a51a94fd7538309c9d9485d01e03ed3504c
+      - PUID=1000
+      - PGID=1000
+    network_mode: service:ts-remote-access
