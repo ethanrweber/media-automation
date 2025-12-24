@@ -33,8 +33,3 @@ networks:
       config:
         - subnet: 173.25.0.0/16
           gateway: 173.25.0.1
-
-# Shared secrets
-secrets:
-  tailscale_authkey:
-    file: ./secrets/tailscale_authkey
