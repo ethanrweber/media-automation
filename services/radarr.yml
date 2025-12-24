@@ -1,0 +1,15 @@
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - C:\MEDIA_AUTOMATION\Radarr\Config:/config
+      - E:\media\movies:/data/movies
+      - C:\MEDIA_AUTOMATION\Downloads:/data/downloads
+      - C:\MEDIA_AUTOMATION\Radarr\Backup:/data/Backup
+    restart: unless-stopped
+    network_mode: service:ts-remote-access
