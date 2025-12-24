@@ -1,0 +1,19 @@
+services:
+  gluetun-qbittorrent-port-manager:
+    image: snoringdragon/gluetun-qbittorrent-port-manager:latest
+    restart: unless-stopped
+    container_name: gt-port-manager
+    network_mode: "service:gluetun"
+    volumes:
+      - C:\MEDIA_AUTOMATION\Gluetun:/gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - QBITTORRENT_SERVER=localhost
+      - QBITTORRENT_PORT=8080
+      - QBITTORRENT_USER=${QBITTORRENT_USER}
+      - QBITTORRENT_PASS=${QBITTORRENT_PASS}
+      - PORT_FORWARDED=/gluetun/forwarded_port
+      - HTTP_S=http # Select 'http' or 'https' depending on if you use certificates.
+      - TZ=America/Chicago
