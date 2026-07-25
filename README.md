@@ -1,5 +1,5 @@
-# media-automation
-docker compose file containing the services required for setting up my personal media automation
+# home-server
+docker compose stack for my home server: *arr media automation, torrenting behind a vpn, e-book and comic servers, plex analytics, network monitoring, a homepage dashboard, and a tailscale sidecar per service for remote access.
 
 # updating containers
 ```
@@ -42,7 +42,7 @@ some services have their own tailscale sidecar container for remote access. each
 | service | url | serve config |
 |---------|-----|-------------|
 | komga | `https://komga.<your-tailnet>.ts.net` | `services/comics/ts-komga-config/serve-config.json` |
-| calibre-web-automated | `https://calibre.<your-tailnet>.ts.net` | `services/books/ts-calibre-web-automated-config/serve-config.json` |
+| calibre-web-automated | `https://calibre.<your-tailnet>.ts.net` | `services/calibre-web-automated/ts-calibre-web-automated-config/serve-config.json` |
 
 serve configs are stored in the repo alongside their service compose files and mounted directly into the sidecar container.
 
