@@ -41,15 +41,17 @@ some services have their own tailscale sidecar container for remote access. each
 ## current funneled services
 | service | url | serve config |
 |---------|-----|-------------|
+| homepage | `https://homepage.<your-tailnet>.ts.net` | `services/homepage/ts-homepage-config/serve-config.json` |
 | komga | `https://komga.<your-tailnet>.ts.net` | `services/comics/ts-komga-config/serve-config.json` |
 | calibre-web-automated | `https://calibre.<your-tailnet>.ts.net` | `services/calibre-web-automated/ts-calibre-web-automated-config/serve-config.json` |
 
 serve configs are stored in the repo alongside their service compose files and mounted directly into the sidecar container.
 
+**funnel means the public internet, with no authentication in front of it.** tailscale funnel has no auth of its own, so anything reachable through a funneled origin is anonymous. homepage in particular proxies its widgets server-side using the credentials in `homepage.env`, so its funneled dashboard exposes whatever those widgets display (torrent names and paths, *arr queues, plex activity) to anyone with the url. that is bounded — non-widget endpoints return 403, `/api/config/*` returns 422, and no credential is ever sent to the client — but treat every funneled service as world-readable.
+
 ## adding a new service with a tailscale sidecar
-1. create a state directory: `${CONFIG_ROOT}/ts-<service>/state`
-2. create a `ts-<service>-config/serve-config.json` next to the service's compose file (copy from an existing one and update the port)
-3. add a sidecar to the service's compose file using `extends`:
+1. create a `ts-<service>-config/serve-config.json` next to the service's compose file (copy from an existing one and update the port). **copy from a tailnet-only service such as `services/sonarr/ts-sonarr-config/`, not from komga or calibre — those carry `AllowFunnel` and would publish the new service to the internet.**
+2. add a sidecar to the service's compose file using `extends`:
    ```yaml
    ts-myservice:
      extends:
@@ -59,10 +61,11 @@ serve configs are stored in the repo alongside their service compose files and m
      hostname: myservice
      volumes:
        - ${CONFIG_ROOT}/ts-myservice/state:/var/lib/tailscale
-       - ${CONFIG_ROOT}/ts-myservice/config:/config
+       - ./ts-myservice-config:/config:ro
    ```
-4. set the service's `network_mode: service:ts-myservice` and add a `depends_on` with `condition: service_healthy`
-5. enable the `funnel` node attribute in the [tailscale ACL policy](https://login.tailscale.com/admin/acls) if not already done (only needs to be done once for your tailscale account, _not_ once per service)
+   the config mount is the repo directory from step 1, not a `${CONFIG_ROOT}` path — tailscale only ever reads `serve-config.json`, so `:ro` is safe. docker creates the state directory on first start; it needs no setup.
+3. set the service's `network_mode: service:ts-myservice` and add a `depends_on` with `condition: service_healthy`
+4. enable the `funnel` node attribute in the [tailscale ACL policy](https://login.tailscale.com/admin/acls) if not already done (only needs to be done once for your tailscale account, _not_ once per service) — note this grants the capability tailnet-wide, so the only thing keeping a service private is the absence of `AllowFunnel` in its serve config
 
 ## gotchas
 
