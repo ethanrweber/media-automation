@@ -70,7 +70,7 @@ serve configs are stored in the repo alongside their service compose files and m
 - tailscale serve's go reverse proxy silently drops semicolon-separated query params. old cgi apps like smokeping use `;` as a query separator — use `&` instead in any url that goes through a sidecar (smokeping accepts both).
 - serve path handlers strip the mount prefix before proxying (`/smokeping/foo` reaches the backend as `/foo`). if the backend expects the prefix, repeat it in the proxy target: `"/smokeping/": {"Proxy": "http://ts-smokeping:80/smokeping/"}`.
 - a serve handler can proxy to another container over the docker network (e.g. ts-homepage proxying `/smokeping/` to `ts-smokeping:80`). this is how a tailnet-only service can be surfaced through an already-funneled host without funneling it separately — and how the homepage smokeping widget stays a relative url that works both on- and off-tailnet.
-- the `tailscale serve` **cli** rejects non-localhost proxy targets ("only localhost or 127.0.0.1 proxies are currently supported", [tailscale#8751](https://github.com/tailscale/tailscale/issues/8751)). the `TS_SERVE_CONFIG` json path does not enforce that check, which is what makes the cross-container handlers above work. don't be thrown off by the cli error message.
+- older `tailscale serve` clis refused non-localhost proxy targets outright ("only localhost or 127.0.0.1 proxies are currently supported", [tailscale#8751](https://github.com/tailscale/tailscale/issues/8751), still open as a feature request about custom domains). that restriction is gone: as of 1.98 the cli accepts a non-localhost host so long as the target includes a scheme (the only related error left in the binary is `non-localhost target %q must include a scheme`), and the `TS_SERVE_CONFIG` json path never enforced it. so cross-container handlers are supported outright, not a loophole.
 
 ## sidecar for a service that already has a network namespace (qbittorrent)
 
@@ -84,7 +84,7 @@ gluetun's firewall already permits its own directly-connected docker subnet, so 
 
 two things to keep in mind:
 - there is deliberately **no `AllowFunnel`** on ts-qbittorrent — the webui must stay tailnet-only.
-- `hostname: qbittorrent` on the sidecar is safe because the `qbittorrent` container has no network endpoint of its own (it borrows gluetun's), so it registers no docker dns name to collide with.
+- `hostname: qbittorrent` on the sidecar collides with nothing, because the `qbittorrent` container has no network endpoint of its own (it borrows gluetun's) and so registers no docker dns name. note the flip side: `qbittorrent` now resolves to the **sidecar**, where it previously returned NXDOMAIN. the sidecar listens only on 443, so `http://qbittorrent:8080` gets connection refused. for container-to-container access to the webui, use `gluetun:8080`.
 
 the LAN fallback at `http://<vm-ip>:8080` still works, since that port is published on gluetun.
 
@@ -131,6 +131,18 @@ docker compose restart <svc>       # app shares the sidecar's netns, so it must 
 ```
 
 order matters — the app is stranded until it restarts too. use `restart`, not `up -d`: a plain `up -d` leaves `ts-*` sidecars alone and would recreate only the app, missing the problem entirely.
+
+**ts-qbittorrent is the exception to both steps.** nothing shares its namespace, so restarting the sidecar alone is the whole fix — bouncing qbittorrent afterwards would interrupt torrents for no reason. and the app-is-innocent check has to go via the namespace owner, since nothing listens on localhost in the sidecar's netns:
+
+```
+docker exec ts-qbittorrent wget -qO /dev/null http://gluetun:8080/
+```
+
+if the dashboard graph itself is what's slow, don't try to read it through the funnel — smokeping is published straight onto the LAN, bypassing every sidecar:
+
+```
+http://<vm-ip>:8085/smokeping/?displaymode=a&start=-24h&end=now&target=Tailnet.AllFunnels
+```
 
 # scripts
 

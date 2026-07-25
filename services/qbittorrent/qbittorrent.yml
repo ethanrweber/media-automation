@@ -9,7 +9,7 @@ services:
     hostname: qbittorrent
     volumes:
       - ${CONFIG_ROOT}/ts-qbittorrent/state:/var/lib/tailscale
-      - ./ts-qbittorrent-config:/config
+      - ./ts-qbittorrent-config:/config:ro # tailscale only reads serve-config.json, never writes here
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
