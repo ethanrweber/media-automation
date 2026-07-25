@@ -90,12 +90,43 @@ the LAN fallback at `http://<vm-ip>:8080` still works, since that port is publis
 
 # smokeping targets
 
-the smokeping target list lives in the repo at `services/smokeping/smokeping-config/Targets` and is bind-mounted over the copy in `${CONFIG_ROOT}`. to change what gets probed:
+the smokeping target list lives in the repo at `services/smokeping/smokeping-config/Targets.template`. it is **not** mounted directly — `services/smokeping/smokeping-init/10-render-targets.sh` (mounted into `/custom-cont-init.d`, which lscr.io images execute before the app starts) renders it to `/config/Targets` at every container start, substituting `%%TS_DOMAIN%%` with `TS_DOMAIN` from `.env`.
 
-1. edit `services/smokeping/smokeping-config/Targets`
-2. `docker compose restart smokeping`
+the indirection exists because smokeping's config format has no variable interpolation and the tailnet hostname is deliberately kept out of this public repo. everything else in the file is literal.
+
+to change what gets probed:
+
+1. edit `services/smokeping/smokeping-config/Targets.template`
+2. `docker compose restart smokeping` (the restart is what re-renders)
 
 removing a target leaves its `.rrd` data file behind in `${CONFIG_ROOT}/SmokePing/data/` (harmless); re-adding a target at the same path resumes its history.
+
+## the Tailnet section
+
+the `+ Tailnet` targets use the `Curl` probe to measure end-to-end https response time through the tailscale funnel, for the three publicly funneled services. this is early warning for the sidecar failure mode described below — healthy is ~0.3s across all three, and one node drifting into seconds while its siblings stay flat is the signature.
+
+tailnet-only sidecars can't be probed this way: they have no public url, and smokeping (in `ts-smokeping`'s userspace-networking namespace) can't route to tailnet addresses.
+
+caveat: the `Curl` probe *definition* lives in `${CONFIG_ROOT}/SmokePing/config/Probes`, which is **not** repo-managed. if that file is ever lost, smokeping will fail to start because `Targets` references a probe that no longer exists.
+
+# tailscale sidecar funnel latency
+
+a `ts-*` sidecar's DERP connection can silently rot, making funnel TLS handshakes take seconds while the app behind it stays instant. the container healthcheck stays green throughout — tailscale's `/healthz` says nothing about relay quality — and nothing is logged.
+
+to confirm, compare the tls phase across two funneled sidecars:
+
+```
+curl -s -o /dev/null -w 'tls=%{time_appconnect}s\n' https://<service>.<your-tailnet>.ts.net/
+```
+
+~0.2-0.4s is healthy. if one node is seconds and another on the same host is fine, it's that node. verify the app is innocent with `docker exec ts-<svc> wget -qO /dev/null http://127.0.0.1:<port>/`, then:
+
+```
+docker compose restart ts-<svc>    # wait for healthy
+docker compose restart <svc>       # app shares the sidecar's netns, so it must follow
+```
+
+order matters — the app is stranded until it restarts too. use `restart`, not `up -d`: a plain `up -d` leaves `ts-*` sidecars alone and would recreate only the app, missing the problem entirely.
 
 # scripts
 

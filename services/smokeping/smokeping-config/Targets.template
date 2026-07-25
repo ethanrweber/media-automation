@@ -261,3 +261,34 @@ title = ISP
 menu = First Hop
 title = ISP first hop past the router (72.8.112.2)
 host = 72.8.112.2
+
++ Tailnet
+
+menu = Tailnet
+title = Tailscale Funnel Response Time
+remark = End-to-end https response time through the tailscale funnel (public path). \
+         A single node degrading here while its siblings stay flat means that node's \
+         DERP connection has gone bad — restart its ts-* sidecar, then the app. \
+         Healthy is ~0.3s; the July 2026 ts-homepage incident sat at 5-30s. \
+         /favicon.ico 404s on homepage and calibre — that is fine and deliberate: \
+         this probe times the tls+transport path, and a small error page exercises \
+         it without pulling the 40KB dashboard five times per cycle.
+probe = Curl
+
+++ HomepageFunnel
+menu = Homepage
+title = Homepage via funnel
+host = homepage.%%TS_DOMAIN%%
+urlformat = https://%host%/favicon.ico
+
+++ KomgaFunnel
+menu = Komga
+title = Komga via funnel
+host = komga.%%TS_DOMAIN%%
+urlformat = https://%host%/favicon.ico
+
+++ CalibreFunnel
+menu = Calibre-Web
+title = Calibre-Web-Automated via funnel
+host = calibre.%%TS_DOMAIN%%
+urlformat = https://%host%/favicon.ico
