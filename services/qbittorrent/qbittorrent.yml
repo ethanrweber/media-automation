@@ -1,4 +1,16 @@
 services:
+  # unlike every other sidecar, nothing joins this one's network namespace —
+  # qbittorrent is locked into gluetun's. it reverse-proxies to gluetun:8080 instead.
+  ts-qbittorrent:
+    extends:
+      file: ../tailscale-sidecar.yml
+      service: tailscale-sidecar
+    container_name: ts-qbittorrent
+    hostname: qbittorrent
+    volumes:
+      - ${CONFIG_ROOT}/ts-qbittorrent/state:/var/lib/tailscale
+      - ./ts-qbittorrent-config:/config
+
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent

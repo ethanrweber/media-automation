@@ -70,6 +70,23 @@ serve configs are stored in the repo alongside their service compose files and m
 - tailscale serve's go reverse proxy silently drops semicolon-separated query params. old cgi apps like smokeping use `;` as a query separator — use `&` instead in any url that goes through a sidecar (smokeping accepts both).
 - serve path handlers strip the mount prefix before proxying (`/smokeping/foo` reaches the backend as `/foo`). if the backend expects the prefix, repeat it in the proxy target: `"/smokeping/": {"Proxy": "http://ts-smokeping:80/smokeping/"}`.
 - a serve handler can proxy to another container over the docker network (e.g. ts-homepage proxying `/smokeping/` to `ts-smokeping:80`). this is how a tailnet-only service can be surfaced through an already-funneled host without funneling it separately — and how the homepage smokeping widget stays a relative url that works both on- and off-tailnet.
+- the `tailscale serve` **cli** rejects non-localhost proxy targets ("only localhost or 127.0.0.1 proxies are currently supported", [tailscale#8751](https://github.com/tailscale/tailscale/issues/8751)). the `TS_SERVE_CONFIG` json path does not enforce that check, which is what makes the cross-container handlers above work. don't be thrown off by the cli error message.
+
+## sidecar for a service that already has a network namespace (qbittorrent)
+
+qbittorrent can't use the normal pattern — it's pinned to `network_mode: service:gluetun` so its torrent traffic exits through protonvpn, and a container gets exactly one `network_mode`. so `ts-qbittorrent` inverts the pattern: **nothing joins the sidecar's namespace**, and the sidecar reverse-proxies to the namespace owner instead:
+
+```json
+"Handlers": { "/": { "Proxy": "http://gluetun:8080" } }
+```
+
+gluetun's firewall already permits its own directly-connected docker subnet, so no `FIREWALL_OUTBOUND_SUBNETS` change is needed. neither gluetun nor qbittorrent is modified, so the vpn path is untouched. the same trick works for any service locked into another container's namespace.
+
+two things to keep in mind:
+- there is deliberately **no `AllowFunnel`** on ts-qbittorrent — the webui must stay tailnet-only.
+- `hostname: qbittorrent` on the sidecar is safe because the `qbittorrent` container has no network endpoint of its own (it borrows gluetun's), so it registers no docker dns name to collide with.
+
+the LAN fallback at `http://<vm-ip>:8080` still works, since that port is published on gluetun.
 
 # smokeping targets
 

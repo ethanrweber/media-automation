@@ -11,7 +11,7 @@ include:
   - path: ./services/homepage/homepage.yml
   - path: ./services/portainer/portainer.yml
   - path: ./services/prowlarr/prowlarr.yml
-  - path: ./services/qbittorrent.yml
+  - path: ./services/qbittorrent/qbittorrent.yml
   - path: ./services/radarr/radarr.yml
   - path: ./services/shelfmark/shelfmark.yml
   - path: ./services/smokeping/smokeping.yml

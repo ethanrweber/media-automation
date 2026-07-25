@@ -131,7 +131,7 @@
 
         - qBittorrent:
             icon: qbittorrent.png
-            href: http://192.168.1.98:8080/
+            href: https://qbittorrent.{{HOMEPAGE_VAR_TS_DOMAIN}}/
             description: qBittorrent WebUI (routed through ProtonVPN via Gluetun)
             ping: http://gluetun:8080
             widget:
