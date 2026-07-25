@@ -166,6 +166,23 @@
               allowScrolling: no
               refreshInterval: 300000
 
+        - Funnel Latency:
+            icon: tailscale.png
+            # Tailnet.AllFunnels is a smokeping multihost target: it overlays the three
+            # per-service funnel graphs into one chart without probing anything itself.
+            # 24h window (not 3h like the graph above) because sidecar DERP degradation
+            # comes on slowly — a short window shows it as flat-high with no baseline.
+            # same url rules as the Smokeping widget above: relative path, & separators.
+            href: /smokeping/?displaymode=n&start=-24h&end=now&target=Tailnet.AllFunnels
+            description: Tailscale funnel response time — one line diverging means that sidecar needs a restart
+            ping: http://ts-smokeping:80
+            widget:
+              type: iframe
+              name: funnel-latency
+              src: /smokeping/?displaymode=a&start=-24h&end=now&target=Tailnet.AllFunnels
+              allowScrolling: no
+              refreshInterval: 300000
+
 - system-row-1:
     - pve-1:
         widget:
