@@ -90,14 +90,12 @@ the LAN fallback at `http://<vm-ip>:8080` still works, since that port is publis
 
 # smokeping targets
 
-the smokeping target list lives in the repo at `services/smokeping/smokeping-config/Targets.template`. it is **not** mounted directly — `services/smokeping/smokeping-init/10-render-targets.sh` (mounted into `/custom-cont-init.d`, which lscr.io images execute before the app starts) renders it to `/config/Targets` at every container start, substituting `%%TS_DOMAIN%%` with `TS_DOMAIN` from `.env`.
+the smokeping target list lives in the repo at `services/smokeping/smokeping-config/Targets` and is bind-mounted over the copy in `${CONFIG_ROOT}`. to change what gets probed:
 
-the indirection exists because smokeping's config format has no variable interpolation and the tailnet hostname is deliberately kept out of this public repo. everything else in the file is literal.
+1. edit `services/smokeping/smokeping-config/Targets`
+2. `docker compose restart smokeping`
 
-to change what gets probed:
-
-1. edit `services/smokeping/smokeping-config/Targets.template`
-2. `docker compose restart smokeping` (the restart is what re-renders)
+the funnel targets contain the tailnet hostname literally. smokeping's config format has no variable interpolation, and the domain is already present in this repo's git history, so the placeholder-plus-render-script indirection that briefly lived here bought nothing and has been removed.
 
 removing a target leaves its `.rrd` data file behind in `${CONFIG_ROOT}/SmokePing/data/` (harmless); re-adding a target at the same path resumes its history.
 
@@ -113,7 +111,7 @@ smokeping's config is one file per section — `/etc/smokeping/config` is just s
 
 only `Targets` is repo-managed. the other six are **stock** — byte-identical to `/defaults/smoke-conf/` in the image, which lscr.io copies into `/config` whenever a file is missing. that includes the `+ Curl` block the Tailnet section depends on, so it survives losing `${CONFIG_ROOT}` on its own.
 
-we deliberately don't vendor `Probes`: bind-mounting a stock file would pin it and silently opt out of upstream fixes. instead the init script warns if `Targets` asks for a probe `Probes` doesn't define, turning a cryptic perl error into a clear one.
+we deliberately don't vendor `Probes`: bind-mounting a stock file would pin it and silently opt out of upstream fixes. if the image ever stopped shipping the `+ Curl` block, smokeping would refuse to start with a specific message naming the file, line, and missing probe (`ERROR: /config/Targets, line N: probe Curl missing from the Probes section`), so no extra guard is warranted.
 
 # tailscale sidecar funnel latency
 

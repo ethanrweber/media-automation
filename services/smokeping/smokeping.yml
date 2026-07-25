@@ -22,10 +22,8 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
-      - TS_DOMAIN=${TS_DOMAIN} # substituted into Targets.template at startup
     volumes:
       - ${CONFIG_ROOT}/SmokePing/config:/config
-      - ./smokeping-config/Targets.template:/config/Targets.template:ro # repo-managed; rendered to /config/Targets by the init script
-      - ./smokeping-init:/custom-cont-init.d:ro
+      - ./smokeping-config/Targets:/config/Targets # repo-managed; shadows the CONFIG_ROOT copy
       - ${CONFIG_ROOT}/SmokePing/data:/data
     restart: unless-stopped

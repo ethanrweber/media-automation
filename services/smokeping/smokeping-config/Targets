@@ -278,19 +278,19 @@ probe = Curl
 ++ HomepageFunnel
 menu = Homepage
 title = Homepage via funnel
-host = homepage.%%TS_DOMAIN%%
+host = homepage.tail17ddbe.ts.net
 urlformat = https://%host%/favicon.ico
 
 ++ KomgaFunnel
 menu = Komga
 title = Komga via funnel
-host = komga.%%TS_DOMAIN%%
+host = komga.tail17ddbe.ts.net
 urlformat = https://%host%/favicon.ico
 
 ++ CalibreFunnel
 menu = Calibre-Web
 title = Calibre-Web-Automated via funnel
-host = calibre.%%TS_DOMAIN%%
+host = calibre.tail17ddbe.ts.net
 urlformat = https://%host%/favicon.ico
 
 # multihost target: overlays the three graphs above into one chart rather than
