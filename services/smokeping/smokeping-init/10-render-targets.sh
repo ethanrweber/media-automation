@@ -24,3 +24,12 @@ fi
 
 sed "s/%%TS_DOMAIN%%/${TS_DOMAIN:-}/g" "${TEMPLATE}" > "${OUT}"
 echo "[render-targets] rendered ${OUT} from ${TEMPLATE}"
+
+# The Tailnet section says `probe = Curl`, but the probe *definition* lives in /config/Probes —
+# a stock, image-supplied file we deliberately don't repo-manage (see README). A target naming a
+# probe that isn't defined is a fatal smokeping parse error with an unhelpful message, so if the
+# image ever stops shipping the Curl block, say so plainly instead.
+if grep -qE '^probe *= *Curl' "${OUT}" && ! grep -qE '^\+ *Curl' /config/Probes 2>/dev/null; then
+    echo "[render-targets] WARNING: ${OUT} uses 'probe = Curl' but /config/Probes defines no '+ Curl' block"
+    echo "[render-targets]          smokeping will fail to start — restore it from /defaults/smoke-conf/Probes"
+fi

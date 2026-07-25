@@ -107,7 +107,13 @@ the `+ Tailnet` targets use the `Curl` probe to measure end-to-end https respons
 
 tailnet-only sidecars can't be probed this way: they have no public url, and smokeping (in `ts-smokeping`'s userspace-networking namespace) can't route to tailnet addresses.
 
-caveat: the `Curl` probe *definition* lives in `${CONFIG_ROOT}/SmokePing/config/Probes`, which is **not** repo-managed. if that file is ever lost, smokeping will fail to start because `Targets` references a probe that no longer exists.
+### how Probes and Targets relate
+
+smokeping's config is one file per section — `/etc/smokeping/config` is just seven `@include` lines pointing at `/config/{General,Alerts,Database,Presentation,Probes,Slaves,Targets}`. `Probes` declares the measurement tools and their defaults (each `+ Name` block maps to `/usr/share/smokeping/Smokeping/probes/Name.pm`); `Targets` picks one per subtree with `probe = Name`. a target naming an undefined probe is a fatal parse error.
+
+only `Targets` is repo-managed. the other six are **stock** — byte-identical to `/defaults/smoke-conf/` in the image, which lscr.io copies into `/config` whenever a file is missing. that includes the `+ Curl` block the Tailnet section depends on, so it survives losing `${CONFIG_ROOT}` on its own.
+
+we deliberately don't vendor `Probes`: bind-mounting a stock file would pin it and silently opt out of upstream fixes. instead the init script warns if `Targets` asks for a probe `Probes` doesn't define, turning a cryptic perl error into a clear one.
 
 # tailscale sidecar funnel latency
 
