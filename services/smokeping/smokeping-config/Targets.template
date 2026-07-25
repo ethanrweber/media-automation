@@ -292,3 +292,11 @@ menu = Calibre-Web
 title = Calibre-Web-Automated via funnel
 host = calibre.%%TS_DOMAIN%%
 urlformat = https://%host%/favicon.ico
+
+# multihost target: overlays the three graphs above into one chart rather than
+# probing anything itself, so it costs no extra requests. this is the view worth
+# looking at — one line diverging while the others stay flat is the whole signal.
+++ AllFunnels
+menu = All Funnels
+title = All funnels compared
+host = /Tailnet/HomepageFunnel /Tailnet/KomgaFunnel /Tailnet/CalibreFunnel
