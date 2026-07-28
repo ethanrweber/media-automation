@@ -171,8 +171,9 @@
             icon: tailscale.png
             # Tailnet.AllFunnels is a smokeping multihost target: it overlays the three
             # per-service funnel graphs into one chart without probing anything itself.
-            # 24h window (not 3h like the graph above) because sidecar DERP degradation
-            # comes on slowly — a short window shows it as flat-high with no baseline.
+            # snapshotted over 24h (the ISP graph above uses 3h) because sidecar DERP
+            # degradation comes on slowly — a short window shows it as flat-high with
+            # no baseline to compare against. windows live in GRAPHS in smokeping.yml.
             # static PNG, same reasoning as the Smokeping widget above.
             href: https://smokeping.{{HOMEPAGE_VAR_TS_DOMAIN}}/
             description: Tailscale funnel response time — one line diverging means that sidecar needs a restart

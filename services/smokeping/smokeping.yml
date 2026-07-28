@@ -50,26 +50,40 @@ services:
       - sh
       - -c
       - |
+        # name:target:window — keep this list in sync with the healthcheck's expected
+        # count below. every target listed here is published PUBLICLY as a png, so its
+        # `title` in the Targets file must not contain an address (smokeping draws the
+        # title into the image).
+        GRAPHS='funnel-latency:Tailnet.AllFunnels:-24h isp-latency:ISP.FirstHop:-3h'
         while :; do
           ok=1
-          for pair in funnel-latency=Tailnet.AllFunnels isp-latency=ISP.FirstHop; do
-            name=$${pair%%=*}
-            target=$${pair#*=}
-            # write to a temp file and rename, so a failed or partial fetch can never
-            # replace a good graph with a truncated one
-            if wget -qO "/out/.$$name.tmp" \
-                 "http://ts-smokeping:80/smokeping/?displaymode=a&start=-24h&end=now&target=$$target"; then
-              mv "/out/.$$name.tmp" "/out/$$name.png"
+          for spec in $$GRAPHS; do
+            name=$${spec%%:*}
+            rest=$${spec#*:}
+            target=$${rest%%:*}
+            window=$${rest#*:}
+            tmp="/out/.$$name.tmp"
+            # -T 30 so a stalled fetch can't wedge the loop past its own cycle.
+            # a 200 is not proof of a graph: smokeping answers 200 with an html error
+            # page for a bad target, so check the png magic bytes before promoting.
+            # write-then-rename means a bad fetch can never replace a good graph.
+            if wget -q -T 30 -O "$$tmp" \
+                 "http://ts-smokeping:80/smokeping/?displaymode=a&start=$$window&end=now&target=$$target" \
+               && [ -s "$$tmp" ] \
+               && head -c 8 "$$tmp" | od -An -tx1 | grep -q '89 50 4e 47'; then
+              mv "$$tmp" "/out/$$name.png"
             else
               ok=0
-              rm -f "/out/.$$name.tmp"
+              rm -f "$$tmp"
+              echo "snapshot failed: $$name ($$target)"
             fi
           done
           # back off briefly on failure so a cold start doesn't wait a full step
           if [ "$$ok" = 1 ]; then sleep 300; else sleep 30; fi
         done
     # a dead snapshotter would otherwise show a silently frozen graph forever; fail the
-    # container instead once either PNG goes stale
+    # container instead once either PNG goes stale.
+    # the `-eq 2` must match the number of entries in GRAPHS above.
     healthcheck:
       test: ["CMD", "sh", "-c", "test $$(find /out -name '*.png' -mmin -15 | wc -l) -eq 2"]
       interval: 60s

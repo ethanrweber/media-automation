@@ -110,7 +110,15 @@ instead, `smokeping-graph-snapshot` (a ~7MB busybox loop in `services/smokeping/
 
 no freshness is lost — the probe step is 300s, so a live request could not show anything newer than the snapshot.
 
-two deliberate details: the fetch writes to a temp file and renames it, so a failed or partial fetch can never replace a good graph with a truncated one; and the container's healthcheck fails if either png goes older than 15 minutes, so a dead snapshotter shows up as an unhealthy container instead of a silently frozen graph.
+three deliberate details: the fetch writes to a temp file and renames it, so a failed or partial fetch can never replace a good graph with a truncated one; it checks the png magic bytes first, because smokeping answers `200` with an html error page for a bad target and that would otherwise be promoted to a "fresh" graph; and the container's healthcheck fails if either png goes older than 15 minutes, so a dead snapshotter shows up as an unhealthy container instead of a silently frozen graph.
+
+**anything added to the snapshot list is published to the public internet**, so its `title` in `Targets` must not contain an address — smokeping renders the title into the image. (`host` is fine; it is never drawn.) this is why `ISP.FirstHop`'s title no longer carries the hop address. the LAN targets still do, which is safe only because they aren't snapshotted.
+
+on a fresh deploy, create the output directory before first start — the snapshotter runs as `1000:1000` and cannot chown a bind mount that docker auto-creates as root:
+
+```
+mkdir -p ${CONFIG_ROOT}/Homepage/graphs && chown 1000:1000 ${CONFIG_ROOT}/Homepage/graphs
+```
 
 ## the Tailnet section
 

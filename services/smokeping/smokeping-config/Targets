@@ -259,7 +259,12 @@ title = ISP
 
 ++ FirstHop
 menu = First Hop
-title = ISP first hop past the router (72.8.112.2)
+# NOTE: this target is snapshotted to a PUBLIC png (see smokeping-graph-snapshot in
+# smokeping.yml). smokeping renders `title` into the image, so the title must not
+# contain an address. any target added to the snapshot list needs the same treatment —
+# this is a security property of this file now, not a cosmetic choice. `host` is safe:
+# it is never drawn into the graph.
+title = ISP first hop past the router
 host = 72.8.112.2
 
 + Tailnet
