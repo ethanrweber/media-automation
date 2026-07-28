@@ -27,3 +27,67 @@ services:
       - ./smokeping-config/Targets:/config/Targets # repo-managed; shadows the CONFIG_ROOT copy
       - ${CONFIG_ROOT}/SmokePing/data:/data
     restart: unless-stopped
+
+  # Snapshots the two dashboard graphs to static PNGs that homepage serves itself.
+  # Why: homepage is funneled (public), and tailscale serve matches on path prefix only —
+  # it can't tell `displaymode=a` (a graph) from `displaymode=n` (the whole browsable UI),
+  # since both are `/smokeping/`. Proxying the CGI publicly therefore exposed the entire
+  # smokeping site: every target, the LAN addressing scheme, and the ISP first hop.
+  # Serving pre-rendered images instead means exactly two immutable paths are public,
+  # with no query string to manipulate. Costs nothing in freshness: the probe step is
+  # 300s, so a live request could never show anything newer than this snapshot.
+  smokeping-graph-snapshot:
+    image: busybox:1.37
+    container_name: smokeping-graph-snapshot
+    user: "1000:1000"
+    read_only: true
+    depends_on:
+      ts-smokeping:
+        condition: service_healthy
+    volumes:
+      - ${CONFIG_ROOT}/Homepage/graphs:/out
+    command:
+      - sh
+      - -c
+      - |
+        # name:target:window — keep this list in sync with the healthcheck's expected
+        # count below. every target listed here is published PUBLICLY as a png, so its
+        # `title` in the Targets file must not contain an address (smokeping draws the
+        # title into the image).
+        GRAPHS='funnel-latency:Tailnet.AllFunnels:-24h isp-latency:ISP.FirstHop:-3h'
+        while :; do
+          ok=1
+          for spec in $$GRAPHS; do
+            name=$${spec%%:*}
+            rest=$${spec#*:}
+            target=$${rest%%:*}
+            window=$${rest#*:}
+            tmp="/out/.$$name.tmp"
+            # -T 30 so a stalled fetch can't wedge the loop past its own cycle.
+            # a 200 is not proof of a graph: smokeping answers 200 with an html error
+            # page for a bad target, so check the png magic bytes before promoting.
+            # write-then-rename means a bad fetch can never replace a good graph.
+            if wget -q -T 30 -O "$$tmp" \
+                 "http://ts-smokeping:80/smokeping/?displaymode=a&start=$$window&end=now&target=$$target" \
+               && [ -s "$$tmp" ] \
+               && head -c 8 "$$tmp" | od -An -tx1 | grep -q '89 50 4e 47'; then
+              mv "$$tmp" "/out/$$name.png"
+            else
+              ok=0
+              rm -f "$$tmp"
+              echo "snapshot failed: $$name ($$target)"
+            fi
+          done
+          # back off briefly on failure so a cold start doesn't wait a full step
+          if [ "$$ok" = 1 ]; then sleep 300; else sleep 30; fi
+        done
+    # a dead snapshotter would otherwise show a silently frozen graph forever; fail the
+    # container instead once either PNG goes stale.
+    # the `-eq 2` must match the number of entries in GRAPHS above.
+    healthcheck:
+      test: ["CMD", "sh", "-c", "test $$(find /out -name '*.png' -mmin -15 | wc -l) -eq 2"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped

@@ -20,6 +20,7 @@ services:
     volumes:
       - ./homepage-config:/app/config
       - /mnt/storage/media:/media:ro
+      - ${CONFIG_ROOT}/Homepage/graphs:/app/public/graphs:ro # static smokeping graphs, written by smokeping-graph-snapshot; served at /graphs/*.png
     env_file:
       - ./homepage.env
     environment:

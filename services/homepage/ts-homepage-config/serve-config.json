@@ -9,9 +9,6 @@
       "Handlers": {
         "/": {
           "Proxy": "http://127.0.0.1:3000"
-        },
-        "/smokeping/": {
-          "Proxy": "http://ts-smokeping:80/smokeping/"
         }
       }
     }
