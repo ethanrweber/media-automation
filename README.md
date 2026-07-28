@@ -72,7 +72,7 @@ serve configs are stored in the repo alongside their service compose files and m
 - `TS_AUTHKEY` in `.env` is only read the first time a sidecar registers; existing sidecars auth from their state dirs. tailscale auth keys expire (90 days max), so mint a fresh reusable key at https://login.tailscale.com/admin/settings/keys before adding a new sidecar.
 - tailscale serve's go reverse proxy silently drops semicolon-separated query params. old cgi apps like smokeping use `;` as a query separator — use `&` instead in any url that goes through a sidecar (smokeping accepts both).
 - serve path handlers strip the mount prefix before proxying (`/smokeping/foo` reaches the backend as `/foo`). if the backend expects the prefix, repeat it in the proxy target: `"/smokeping/": {"Proxy": "http://ts-smokeping:80/smokeping/"}`.
-- a serve handler can proxy to another container over the docker network (e.g. ts-homepage proxying `/smokeping/` to `ts-smokeping:80`). this is how a tailnet-only service can be surfaced through an already-funneled host without funneling it separately — and how the homepage smokeping widget stays a relative url that works both on- and off-tailnet.
+- a serve handler can proxy to another container over the docker network (e.g. `"/foo/": {"Proxy": "http://ts-foo:80/foo/"}`), which surfaces a tailnet-only service through an already-funneled host without funneling it separately. **be careful doing this from a funneled host** — serve matches on path prefix only and cannot see query strings, so you publish the backend's *entire* http surface, not the one page you had in mind. ts-homepage used to proxy `/smokeping/` this way and it put the whole smokeping ui on the public internet; see "publishing a graph without publishing the app" below for what replaced it.
 - older `tailscale serve` clis refused non-localhost proxy targets outright ("only localhost or 127.0.0.1 proxies are currently supported", [tailscale#8751](https://github.com/tailscale/tailscale/issues/8751), still open as a feature request about custom domains). that restriction is gone: as of 1.98 the cli accepts a non-localhost host so long as the target includes a scheme (the only related error left in the binary is `non-localhost target %q must include a scheme`), and the `TS_SERVE_CONFIG` json path never enforced it. so cross-container handlers are supported outright, not a loophole.
 
 ## sidecar for a service that already has a network namespace (qbittorrent)
@@ -101,6 +101,16 @@ the smokeping target list lives in the repo at `services/smokeping/smokeping-con
 the funnel targets contain the tailnet hostname literally. smokeping's config format has no variable interpolation, and the domain is already present in this repo's git history, so the placeholder-plus-render-script indirection that briefly lived here bought nothing and has been removed.
 
 removing a target leaves its `.rrd` data file behind in `${CONFIG_ROOT}/SmokePing/data/` (harmless); re-adding a target at the same path resumes its history.
+
+## publishing a graph without publishing the app
+
+homepage is funneled, so anything it proxies is on the public internet. tailscale serve matches on path prefix and cannot see query strings, and smokeping serves a graph (`displaymode=a`) and its whole browsable ui (`displaymode=n`) from the same `/smokeping/` path — so there is no serve config that exposes one without the other. proxying it published every target, the LAN addressing scheme, and the ISP first hop.
+
+instead, `smokeping-graph-snapshot` (a ~7MB busybox loop in `services/smokeping/smokeping.yml`) fetches the two dashboard graphs every 300s and writes them to `${CONFIG_ROOT}/Homepage/graphs`, which homepage mounts at `/app/public/graphs` and serves as static files. the widgets point at `/graphs/funnel-latency.png` and `/graphs/isp-latency.png`, so exactly two immutable paths are public with no query string to manipulate. smokeping itself is reachable only on the tailnet (`https://smokeping.<your-tailnet>.ts.net`) and on the LAN (`:8085`), which is where the tiles' click-through links go.
+
+no freshness is lost — the probe step is 300s, so a live request could not show anything newer than the snapshot.
+
+two deliberate details: the fetch writes to a temp file and renames it, so a failed or partial fetch can never replace a good graph with a truncated one; and the container's healthcheck fails if either png goes older than 15 minutes, so a dead snapshotter shows up as an unhealthy container instead of a silently frozen graph.
 
 ## the Tailnet section
 
@@ -141,7 +151,7 @@ order matters — the app is stranded until it restarts too. use `restart`, not 
 docker exec ts-qbittorrent wget -qO /dev/null http://gluetun:8080/
 ```
 
-if the dashboard graph itself is what's slow, don't try to read it through the funnel — smokeping is published straight onto the LAN, bypassing every sidecar:
+if it's `ts-homepage` that has degraded, the dashboard carrying the graph is itself slow to load (the graph is a static png, so slowness there is the funnel path, never smokeping). read smokeping directly instead — it's published onto the LAN, bypassing every sidecar, and unlike the dashboard tiles this gives you the full interactive ui:
 
 ```
 http://<vm-ip>:8085/smokeping/?displaymode=a&start=-24h&end=now&target=Tailnet.AllFunnels

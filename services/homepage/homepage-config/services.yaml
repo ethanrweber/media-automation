@@ -151,18 +151,19 @@
 
         - Smokeping:
             icon: smokeping.png
-            # NOTE: use & (not smokeping's usual ;) as the query separator — tailscale
-            # serve's Go reverse proxy strips semicolon-separated query params entirely.
-            # relative urls: smokeping is path-proxied through the homepage origin
-            # (ts-homepage serve config) so the widget also works via funnel from
-            # outside the tailnet, where smokeping's own hostname doesn't resolve.
-            href: /smokeping/?displaymode=n&start=-3h&end=now&target=ISP.FirstHop
-            description: Smokeping graphs network latency over time
+            # the graph is a static PNG written by smokeping-graph-snapshot and served
+            # from homepage's own /app/public, NOT proxied from smokeping. homepage is
+            # funneled, and tailscale serve can't distinguish a graph request from the
+            # whole browsable UI (same path, different query), so proxying the cgi here
+            # published every target, the LAN addressing scheme and the ISP first hop.
+            # href goes to the real UI, which is tailnet-only by design.
+            href: https://smokeping.{{HOMEPAGE_VAR_TS_DOMAIN}}/
+            description: Network latency over time (interactive UI is tailnet-only)
             ping: http://ts-smokeping:80
             widget:
               type: iframe
               name: smokeping-latency
-              src: /smokeping/?displaymode=a&start=-3h&end=now&target=ISP.FirstHop
+              src: /graphs/isp-latency.png
               allowScrolling: no
               refreshInterval: 300000
 
@@ -172,14 +173,14 @@
             # per-service funnel graphs into one chart without probing anything itself.
             # 24h window (not 3h like the graph above) because sidecar DERP degradation
             # comes on slowly — a short window shows it as flat-high with no baseline.
-            # same url rules as the Smokeping widget above: relative path, & separators.
-            href: /smokeping/?displaymode=n&start=-24h&end=now&target=Tailnet.AllFunnels
+            # static PNG, same reasoning as the Smokeping widget above.
+            href: https://smokeping.{{HOMEPAGE_VAR_TS_DOMAIN}}/
             description: Tailscale funnel response time — one line diverging means that sidecar needs a restart
             ping: http://ts-smokeping:80
             widget:
               type: iframe
               name: funnel-latency
-              src: /smokeping/?displaymode=a&start=-24h&end=now&target=Tailnet.AllFunnels
+              src: /graphs/funnel-latency.png
               allowScrolling: no
               refreshInterval: 300000
 
