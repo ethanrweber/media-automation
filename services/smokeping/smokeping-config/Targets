@@ -279,15 +279,11 @@ remark = End-to-end https response time through the tailscale funnel (public pat
          this probe times the tls+transport path, and a small error page exercises \
          it without pulling the 40KB dashboard five times per cycle.
 probe = Curl
-# Curl.pm never passes -s, so without this every probe writes a progress meter to
+# `-s`: silent. Without this flag, every probe writes a progress meter to
 # stderr — ~78% of `docker logs smokeping` and ~1.9MB/day into an uncapped json-file log.
-# --dns-servers forces resolution through a public resolver instead of the container's own
-# (which can hand back the tailnet 100.x address for these funnel hosts). Without it the
-# probe occasionally connects node-to-node over the tailnet (~6ms) instead of the public
-# funnel ingress (~350ms), silently under-reporting and masking funnel health — a low
-# reading would no longer prove the public path works. This bit us on CalibreFunnel (July
-# 2026): an ~11h dip to ~6ms with 0 loss was the probe taking the tailnet shortcut, not an
-# outage. -4 pins IPv4 to keep the series continuous with the pre-fix history.
+# `--dns-servers` forces the ping to resolve through the public internet
+# route. Otherwise it can silently fall back to resolving locally.
+# `-4` pins IPv4 to keep the series continuous with the pre-fix history.
 extraargs = -s -4 --dns-servers 1.1.1.1,8.8.8.8
 
 ++ HomepageFunnel
