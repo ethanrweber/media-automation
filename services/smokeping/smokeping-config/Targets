@@ -279,9 +279,12 @@ remark = End-to-end https response time through the tailscale funnel (public pat
          this probe times the tls+transport path, and a small error page exercises \
          it without pulling the 40KB dashboard five times per cycle.
 probe = Curl
-# Curl.pm never passes -s, so without this every probe writes a progress meter to
+# `-s`: silent. Without this flag, every probe writes a progress meter to
 # stderr — ~78% of `docker logs smokeping` and ~1.9MB/day into an uncapped json-file log.
-extraargs = -s
+# `--dns-servers` forces the ping to resolve through the public internet
+# route. Otherwise it can silently fall back to resolving locally.
+# `-4` pins IPv4 to keep the series continuous with the pre-fix history.
+extraargs = -s -4 --dns-servers 1.1.1.1,8.8.8.8
 
 ++ HomepageFunnel
 menu = Homepage
