@@ -277,12 +277,16 @@ remark = End-to-end https response time through the tailscale funnel (public pat
          Healthy is ~0.3s; the July 2026 ts-homepage incident sat at 5-30s. \
          /favicon.ico 404s on homepage and calibre — that is fine and deliberate: \
          this probe times the tls+transport path, and a small error page exercises \
-         it without pulling the 40KB dashboard five times per cycle.
+         it without pulling the 40KB dashboard five times per cycle. \
+         Loss means curl failed outright — the funnel did not answer.
 probe = Curl
+# Without this, Curl.pm records time_total - time_namelookup even when curl exits
+# non-zero, so a failed lookup (time_namelookup = 0) plots as a ~6ms sample at 0 loss.
+# Nothing real is that fast: the funnel is ~0.3s and even the tailnet path is ~67ms.
+require_zero_status = yes
 # `-s`: silent. Without this flag, every probe writes a progress meter to
 # stderr — ~78% of `docker logs smokeping` and ~1.9MB/day into an uncapped json-file log.
-# `--dns-servers` forces the ping to resolve through the public internet
-# route. Otherwise it can silently fall back to resolving locally.
+# `--dns-servers` pins resolution to public resolvers so a tailnet address can't come back.
 # `-4` pins IPv4 to keep the series continuous with the pre-fix history.
 extraargs = -s -4 --dns-servers 1.1.1.1,8.8.8.8
 
