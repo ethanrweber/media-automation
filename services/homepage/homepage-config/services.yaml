@@ -114,10 +114,7 @@
             icon: profilarr.png
             href: https://profilarr.{{HOMEPAGE_VAR_TS_DOMAIN}}/
             description: Profilarr syncs custom formats and quality profiles into Sonarr and Radarr
-            # profilarr-app, not profilarr — the bare name returns two A records (the app
-            # and its sidecar, which listens only on 443), so a client that doesn't retry
-            # across records hits a refused connection roughly half the time.
-            ping: http://profilarr-app:6868
+            ping: http://ts-profilarr:6868
 
         - Shelfmark:
             icon: shelfmark.png

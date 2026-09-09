@@ -91,41 +91,15 @@ two things to keep in mind:
 
 the LAN fallback at `http://<vm-ip>:8080` still works, since that port is published on gluetun.
 
-## sidecar for a service that must also stay reachable on the LAN (profilarr)
+## profilarr accepts exactly one origin
 
-profilarr uses the same inverted pattern as qbittorrent, for a different reason: it has to be usable from a machine that can't join the tailnet. a container in a sidecar's namespace can't publish its own ports, so profilarr keeps its own network, publishes `6868:6868` itself, and `ts-profilarr` reverse-proxies to it:
+profilarr needs `ORIGIN` set to the url it is served from, and it honours **one value at a time**. any other entry point still renders pages, but every form post is rejected with `403 Cross-site POST form submissions are forbidden` — so logins only work on the matching origin.
 
-```json
-"Handlers": { "/": { "Proxy": "http://profilarr-app:6868" } }
-```
+that is why profilarr publishes no LAN port and uses the ordinary sidecar pattern: the tailnet url is the one origin, and a second entry point could only ever be a broken one. the svelte adapter-node variables that would normally allow both (`PROTOCOL_HEADER`, `HOST_HEADER`) are **not compiled into the image** — `strings` on the binary finds `ORIGIN` and none of them. tailscale is not at fault; serve does send correct `X-Forwarded-Host` and `X-Forwarded-Proto` headers. don't run a second container against the same `/config` either; it's one sqlite database.
 
-`profilarr-app` is a docker network alias declared on the profilarr service. it exists because — unlike qbittorrent — the app **does** have its own network endpoint, so the sidecar's `hostname: profilarr` and the service name `profilarr` would both claim that name. the alias makes the proxy target unambiguous. use a distinct alias whenever an app in this pattern keeps its own network.
+`ORIGIN` lives in `.env` as `PROFILARR_ORIGIN`, not in the compose file. after changing it run `docker compose up -d profilarr` — target the service by name, never a bare `up -d`. verify with a form `POST`, not a page load: a `GET` returns 303 whether or not `ORIGIN` matches, and the check only applies to form content types, so a request needs both `Content-Type: application/x-www-form-urlencoded` and a matching `Origin` header to tell you anything.
 
 there is deliberately no `AllowFunnel` on ts-profilarr.
-
-### profilarr accepts exactly one origin
-
-profilarr needs `ORIGIN` set to the url it is served from, and it honours **one value at a time**. the other entry point still renders pages, but every form post is rejected:
-
-| entry point | `GET` | `POST` |
-|---|---|---|
-| the one matching `ORIGIN` | 303 | accepted |
-| the other one | 303 | 403 `Cross-site POST form submissions are forbidden` |
-
-a `GET` looks healthy on both paths, so **test a swap with a `POST`** rather than by loading the page. the post has to look like the real login form:
-
-```bash
-curl -X POST <origin>/auth/setup \
-  -H 'Origin: <origin>' \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  --data 'username=probe&password=probe'
-```
-
-both headers matter, and getting either wrong reads as a false result: a form post with **no** `Origin` header is rejected on both paths, and a **json** body is accepted on both paths, since sveltekit only csrf-checks form content types.
-
-the svelte adapter-node variables that would normally fix this (`PROTOCOL_HEADER`, `HOST_HEADER`) are **not compiled into the image** — `strings` on the binary finds `ORIGIN` and none of them — so there is no way to serve both origins from one container. tailscale is not at fault; serve does send correct `X-Forwarded-Host` and `X-Forwarded-Proto` headers. don't run a second container against the same `/config` either; it's one sqlite database.
-
-`ORIGIN` therefore lives in `.env` as `PROFILARR_ORIGIN`, not in the compose file. to switch sides, edit that variable and run `docker compose up -d profilarr` — target the service by name, never a bare `up -d`.
 
 # smokeping targets
 
