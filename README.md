@@ -91,16 +91,6 @@ two things to keep in mind:
 
 the LAN fallback at `http://<vm-ip>:8080` still works, since that port is published on gluetun.
 
-## profilarr accepts exactly one origin
-
-profilarr needs `ORIGIN` set to the url it is served from, and it honours **one value at a time**. any other entry point still renders pages, but every form post is rejected with `403 Cross-site POST form submissions are forbidden` — so logins only work on the matching origin.
-
-that is why profilarr publishes no LAN port and uses the ordinary sidecar pattern: the tailnet url is the one origin, and a second entry point could only ever be a broken one. the svelte adapter-node variables that would normally allow both (`PROTOCOL_HEADER`, `HOST_HEADER`) are **not compiled into the image** — `strings` on the binary finds `ORIGIN` and none of them. tailscale is not at fault; serve does send correct `X-Forwarded-Host` and `X-Forwarded-Proto` headers. don't run a second container against the same `/config` either; it's one sqlite database.
-
-`ORIGIN` lives in `.env` as `PROFILARR_ORIGIN`, not in the compose file. after changing it run `docker compose up -d profilarr` — target the service by name, never a bare `up -d`. verify with a form `POST`, not a page load: a `GET` returns 303 whether or not `ORIGIN` matches, and the check only applies to form content types, so a request needs both `Content-Type: application/x-www-form-urlencoded` and a matching `Origin` header to tell you anything.
-
-there is deliberately no `AllowFunnel` on ts-profilarr.
-
 # smokeping targets
 
 the smokeping target list lives in the repo at `services/smokeping/smokeping-config/Targets` and is bind-mounted over the copy in `${CONFIG_ROOT}`. to change what gets probed:
