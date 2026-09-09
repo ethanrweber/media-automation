@@ -1,0 +1,33 @@
+services:
+  # like ts-qbittorrent, nothing joins this sidecar's network namespace —
+  # profilarr keeps its own network so it can publish 6868 to the LAN.
+  # the sidecar reverse-proxies to profilarr-app:6868 instead.
+  ts-profilarr:
+    extends:
+      file: ../tailscale-sidecar.yml
+      service: tailscale-sidecar
+    container_name: ts-profilarr
+    hostname: profilarr
+    volumes:
+      - ${CONFIG_ROOT}/ts-profilarr/state:/var/lib/tailscale
+      - ./ts-profilarr-config:/config:ro # tailscale only reads serve-config.json, never writes here
+
+  profilarr:
+    image: ghcr.io/dictionarry-hub/profilarr:latest
+    container_name: profilarr
+    ports:
+      - 6868:6868 # LAN access; the tailnet path goes through ts-profilarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=America/Chicago
+      - AUTH=on
+      - ORIGIN=${PROFILARR_ORIGIN} # single-valued; see README. swap in .env, don't edit here
+    volumes:
+      - ${CONFIG_ROOT}/Profilarr/Config:/config
+    restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - profilarr-app # ts-profilarr's hostname is also "profilarr"; this name is unambiguous

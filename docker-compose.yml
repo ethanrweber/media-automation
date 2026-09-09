@@ -10,6 +10,7 @@ include:
   - path: ./services/gluetun.yml
   - path: ./services/homepage/homepage.yml
   - path: ./services/portainer/portainer.yml
+  - path: ./services/profilarr/profilarr.yml
   - path: ./services/prowlarr/prowlarr.yml
   - path: ./services/qbittorrent/qbittorrent.yml
   - path: ./services/radarr/radarr.yml
