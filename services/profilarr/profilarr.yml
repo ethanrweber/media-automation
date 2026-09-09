@@ -1,0 +1,28 @@
+services:
+  ts-profilarr:
+    extends:
+      file: ../tailscale-sidecar.yml
+      service: tailscale-sidecar
+    container_name: ts-profilarr
+    hostname: profilarr
+    volumes:
+      - ${CONFIG_ROOT}/ts-profilarr/state:/var/lib/tailscale
+      - ./ts-profilarr-config:/config:ro # tailscale only reads serve-config.json, never writes here
+
+  profilarr:
+    image: ghcr.io/dictionarry-hub/profilarr:latest
+    container_name: profilarr
+    network_mode: service:ts-profilarr
+    depends_on:
+      ts-profilarr:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=America/Chicago
+      - AUTH=on
+      - ORIGIN=${PROFILARR_ORIGIN} # single-valued; see README. set in .env, don't edit here
+    volumes:
+      - ${CONFIG_ROOT}/Profilarr/Config:/config
+    restart: unless-stopped

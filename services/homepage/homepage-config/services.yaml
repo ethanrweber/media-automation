@@ -110,6 +110,12 @@
               url: http://ts-bazarr:6767
               key: "{{HOMEPAGE_VAR_BAZARR_KEY}}"
 
+        - Profilarr:
+            icon: profilarr.png
+            href: https://profilarr.{{HOMEPAGE_VAR_TS_DOMAIN}}/
+            description: Profilarr syncs custom formats and quality profiles into Sonarr and Radarr
+            ping: http://ts-profilarr:6868
+
         - Shelfmark:
             icon: shelfmark.png
             href: https://shelfmark.{{HOMEPAGE_VAR_TS_DOMAIN}}/
