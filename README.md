@@ -112,7 +112,16 @@ profilarr needs `ORIGIN` set to the url it is served from, and it honours **one 
 | the one matching `ORIGIN` | 303 | accepted |
 | the other one | 303 | 403 `Cross-site POST form submissions are forbidden` |
 
-a `GET` looks healthy on both paths, so **test a swap with a `POST`** (`/auth/setup` works) rather than by loading the page.
+a `GET` looks healthy on both paths, so **test a swap with a `POST`** rather than by loading the page. the post has to look like the real login form:
+
+```bash
+curl -X POST <origin>/auth/setup \
+  -H 'Origin: <origin>' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  --data 'username=probe&password=probe'
+```
+
+both headers matter, and getting either wrong reads as a false result: a form post with **no** `Origin` header is rejected on both paths, and a **json** body is accepted on both paths, since sveltekit only csrf-checks form content types.
 
 the svelte adapter-node variables that would normally fix this (`PROTOCOL_HEADER`, `HOST_HEADER`) are **not compiled into the image** — `strings` on the binary finds `ORIGIN` and none of them — so there is no way to serve both origins from one container. tailscale is not at fault; serve does send correct `X-Forwarded-Host` and `X-Forwarded-Proto` headers. don't run a second container against the same `/config` either; it's one sqlite database.
 
